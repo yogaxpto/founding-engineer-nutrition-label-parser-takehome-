@@ -13,13 +13,17 @@ import base64
 import json
 import re
 from pathlib import Path
+from typing import Literal
 
 import anthropic
+from anthropic.types import Base64ImageSourceParam, ImageBlockParam, TextBlockParam
 
 from nutrition_label_parser.config import MODEL_NAME
 from nutrition_label_parser.models import ExtractionResult
 
-_MEDIA_TYPES: dict[str, str] = {
+MediaType = Literal['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+
+_MEDIA_TYPES: dict[str, MediaType] = {
     'png': 'image/png',
     'jpg': 'image/jpeg',
     'jpeg': 'image/jpeg',
@@ -101,15 +105,15 @@ def triage_and_extract(image_path: Path, api_key: str = '') -> ExtractionResult:
             {
                 'role': 'user',
                 'content': [
-                    {
-                        'type': 'image',
-                        'source': {
-                            'type': 'base64',
-                            'media_type': media_type,
-                            'data': image_data,
-                        },
-                    },
-                    {'type': 'text', 'text': _USER_PROMPT},
+                    ImageBlockParam(
+                        type='image',
+                        source=Base64ImageSourceParam(
+                            type='base64',
+                            media_type=media_type,
+                            data=image_data,
+                        ),
+                    ),
+                    TextBlockParam(type='text', text=_USER_PROMPT),
                 ],
             }
         ],
@@ -124,7 +128,7 @@ def _load_image_as_base64(path: Path) -> str:
         return base64.standard_b64encode(f.read()).decode('utf-8')
 
 
-def _get_media_type(path: Path) -> str:
+def _get_media_type(path: Path) -> MediaType:
     suffix = path.suffix.lower().lstrip('.')
     return _MEDIA_TYPES.get(suffix, 'image/png')
 

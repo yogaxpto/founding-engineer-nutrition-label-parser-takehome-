@@ -1,5 +1,3 @@
-import pytest
-
 from nutrition_label_parser.normaliser import normalize_nutrient_name, normalize_unit
 from nutrition_label_parser.nutrient_map import NutrientName, Unit
 
