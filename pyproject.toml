@@ -1,0 +1,51 @@
+[project]
+name = "base-python-project"
+version = "0.1.0"
+description = ""
+authors = [{name="Diogo Santos Martins", email="yogaxpto@gmail.com"}]
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.2",
+    "ruff>=0.5.7",
+    "mypy>=1.11.1",
+    "pytest-cov>=6.1.1",
+]
+
+[tool.uv]
+no-build = true
+
+
+[tool.uv.pip]
+system = true
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.coverage.run]
+omit = [
+  "*/tests/*"
+]
+
+[tool.coverage.report]
+omit = [
+  "*/tests/*"
+]
+
+[tool.mypy]
+strict = true
+show_error_codes = true
+warn_unused_configs = true
+pretty = true

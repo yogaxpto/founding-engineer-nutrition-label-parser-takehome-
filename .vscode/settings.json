@@ -1,0 +1,14 @@
+{
+    "mypy-type-checker.preferDaemon": true,
+    "mypy-type-checker.reportingScope": "workspace",
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/**/*.egg-info": true,
+        "**/.ruff_cache": true,
+        "**/.mypy_cache": true,
+        ".coverage": true
+    }
+}

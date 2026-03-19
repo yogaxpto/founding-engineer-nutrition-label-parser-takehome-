@@ -1,0 +1,87 @@
+name: Test
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.image-tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: meta
+        run: echo "image-tag=test-image" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: docker build -t test-image .
+
+      - name: Save Docker image to tarball
+        run: |
+          mkdir -p image-cache
+          docker save -o image-cache/test-image.tar test-image
+
+      - name: Cache Docker image
+        uses: actions/cache@v4
+        with:
+          path: image-cache/test-image.tar
+          key: test-image-${{ hashFiles('Dockerfile') }}
+
+  mypy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/load-cached-docker-image
+        with:
+          image-name: test-image
+
+      - name: Run mypy
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/app \
+            -w /app \
+            test-image \
+            mypy .
+
+  ruff:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: ./.github/actions/load-cached-docker-image
+        with:
+          image-name: test-image
+
+      - name: Run ruff
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/app \
+            -w /app \
+            test-image \
+            ruff check
+
+  tests:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/load-cached-docker-image
+        with:
+          image-name: test-image
+
+      - name: Run pytest
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/app \
+            -w /app \
+            test-image \
+            pytest

@@ -1,0 +1,82 @@
+name: Python Matrix Tests
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  discover-versions:
+    name: Discover Python Versions
+    runs-on: ubuntu-latest
+    outputs:
+      python-versions: ${{ steps.get-versions.outputs.latest-python-versions }}
+      latest-python: ${{ steps.get-versions.outputs.latest-python-version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse minimum Python version from pyproject.toml
+        id: parse-version
+        run: |
+          # Extract minimum version from requires-python (e.g., ">=3.11" -> "3.11")
+          MIN_VERSION=$(python3 -c "
+          import tomllib
+          with open('pyproject.toml', 'rb') as f:
+              data = tomllib.load(f)
+          requires = data['project']['requires-python']
+          # Extract version number (handles >=3.11, >=3.11.0, etc.)
+          import re
+          match = re.search(r'(\d+\.\d+)', requires)
+          print(match.group(1) if match else '3.11')
+          ")
+          echo "min-version=$MIN_VERSION" >> $GITHUB_OUTPUT
+          echo "Detected minimum Python version: $MIN_VERSION"
+
+      - name: Get available Python versions
+        id: get-versions
+        uses: snok/latest-python-versions@master
+        with:
+          min-version: ${{ steps.parse-version.outputs.min-version }}
+          include-prereleases: false
+
+      - name: Display discovered versions
+        run: |
+          echo "Python versions to test: ${{ steps.get-versions.outputs.latest-python-versions }}"
+          echo "Latest Python version: ${{ steps.get-versions.outputs.latest-python-version }}"
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    needs: discover-versions
+    continue-on-error: true
+    strategy:
+      matrix:
+        python-version: ${{ fromJson(needs.discover-versions.outputs.python-versions) }}
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache uv packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: uv pip install -r pyproject.toml --group dev
+
+      - name: Run pytest
+        run: pytest --cov --cov-report=term-missing
