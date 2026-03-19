@@ -5,6 +5,10 @@ description = "Parse product nutrition label images into structured, normalized 
 authors = [{name="Diogo Santos Martins", email="yogaxpto@gmail.com"}]
 readme = "README.md"
 requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.40.0",
+    "pydantic>=2.7.0",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
