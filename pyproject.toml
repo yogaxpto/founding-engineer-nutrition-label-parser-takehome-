@@ -1,7 +1,7 @@
 [project]
-name = "base-python-project"
+name = "nutrition-label-parser"
 version = "0.1.0"
-description = ""
+description = "Parse product nutrition label images into structured, normalized data"
 authors = [{name="Diogo Santos Martins", email="yogaxpto@gmail.com"}]
 readme = "README.md"
 requires-python = ">=3.11"

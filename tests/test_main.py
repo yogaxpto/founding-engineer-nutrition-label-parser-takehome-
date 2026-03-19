@@ -1,6 +1,6 @@
-from base_python_project.main import double
+from nutrition_label_parser.main import main
 
 
 class TestMain:
-    def test_double(self) -> None:
-        assert 4 == double(2)
+    def test_main(self) -> None:
+        main()
